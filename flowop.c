@@ -193,12 +193,20 @@ flowop_endop(threadflow_t *threadflow, flowop_t *flowop, int64_t bytes)
 	if (flowop->fo_attrs & FLOW_ATTR_READ) {
 		threadflow->tf_stats.fs_rbytes += bytes;
 		threadflow->tf_stats.fs_rcount++;
-		flowop->fo_stats.fs_rcount++;
+                flowop->fo_stats.fs_rcount++;
+                // (hzy) We want to update fs_rbytes for the fo_stats 
+                // of flowop so that we can calculate the total read bytes
+                // later.
+                flowop->fo_stats.fs_rbytes += bytes;
 		controlstats.fs_rbytes += bytes;
 		controlstats.fs_rcount++;
 	} else if (flowop->fo_attrs & FLOW_ATTR_WRITE) {
 		threadflow->tf_stats.fs_wbytes += bytes;
 		threadflow->tf_stats.fs_wcount++;
+                // (hzy) We want to update fs_wbytes for the fo_stats
+                // of flowop so that we can calculate the total write bytes
+                // later.
+                flowop->fo_stats.fs_wbytes += bytes;
 		flowop->fo_stats.fs_wcount++;
 		controlstats.fs_wbytes += bytes;
 		controlstats.fs_wcount++;

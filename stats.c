@@ -235,6 +235,30 @@ stats_snap(void)
 	    (iostat->fs_total_lat + aiostat->fs_total_lat) /
 	    ((iostat->fs_count + aiostat->fs_count) * SEC2MS_FLOAT) : 0);
 
+        // (hzy): we print out the number kb have written during the workload
+        // This number is from the filebench perspective; it represents the number
+        // bytes issued to the device and does not represent the actual bytes written
+        // to the disk.
+        filebench_log(LOG_INFO,
+                      "Total written (kb): %5.1lfkb",
+                      (iostat->fs_wbytes + aiostat->fs_wbytes) / KB_FLOAT);
+        // WARNING: don't modify the format string; strace.sh has dependency on this.
+        filebench_log(LOG_INFO, "tot:%5.1lf:",
+                      (iostat->fs_wbytes + aiostat->fs_wbytes) / KB_FLOAT);
+
+        // (hzy): we print out the number of bytes read during the workload here
+        // for the eyeball verification happened in the next step.
+        filebench_log(LOG_INFO,
+                      "Total read (kb): %5.1lfkb",
+                      (iostat->fs_rbytes + aiostat->fs_rbytes) / KB_FLOAT);
+
+        // (hzy): we print out this number to verify the statistic we have gathered
+        // is correct: the total number of bytes written + the total number of bytes read = 
+        // the total number of bytes read/written (i.e., print out here)
+        filebench_log(LOG_INFO,
+                      "Total read/written (kb): %5.1lfkb",
+                      (iostat->fs_bytes + aiostat->fs_bytes) / KB_FLOAT);
+
 	filebench_shm->shm_bequiet = 0;
 }
 

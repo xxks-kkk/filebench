@@ -974,6 +974,25 @@ fileset_unbusy(filesetentry_t *entry, int update_exist,
 static int
 fileset_create(fileset_t *fileset)
 {
+        // (hzy) We issue the iostat command to gather the number of bytes written
+        // for the preallocation of the fileset. We want to measure the write()
+        // during the workload and thus, we want to exclude the diff between two
+        // iostat numbers during the final amplification calculation.
+        char* iostat_cmd = "iostat -d /dev/sda1 | awk '$1 ~ /sda1/ {print $6}'";
+        FILE *fp;
+        fp = popen(iostat_cmd, "r");
+        int iostat1;
+        fscanf(fp, "%d", &iostat1);
+        filebench_log(LOG_INFO, "iostat: %d", iostat1);
+        
+        // (hzy) We carry out the same idea for the space difference
+        // FIXME: I hardcode empty as the directory path
+        char* du_cmd = "du -k \"$HOME/empty\" | awk 'END {print $1}'";
+        fp = popen(du_cmd, "r");
+        int du1;
+        fscanf(fp, "%d", &du1);
+        filebench_log(LOG_INFO, "space before: %d", du1);
+
 	filesetentry_t *entry;
 	char path[MAXPATHLEN];
 	struct stat64 sb;
@@ -1160,6 +1179,28 @@ fileset_create(fileset_t *fileset)
 	    fileset_name,
 	    (u_longlong_t)(((gethrtime() - start) / 1000000000) + 1));
 
+        // (hzy) We issue the iostat command to gather the number of bytes written
+        // for the preallocation of the fileset. We want to measure the write()
+        // during the workload and thus, we want to exclude the diff between two
+        // iostat numbers during the final amplification calculation.
+        fp = popen(iostat_cmd, "r");
+        int iostat2;
+        fscanf(fp, "%d", &iostat2);
+        filebench_log(LOG_INFO, "iostat: %d", iostat2);
+        // WARNING: don't modify this format string; strace.sh kB_wrtn_preallocation
+        // value is set based on this format string
+        filebench_log(LOG_INFO, "diff:%d:", iostat2-iostat1);
+
+        fp = popen(du_cmd, "r");
+        int du2;
+        fscanf(fp, "%d", &du2);
+        filebench_log(LOG_INFO, "space after: %d", du2);
+        // WARNING: don't modify this format string; strace.sh has dependency on it.
+        filebench_log(LOG_INFO, "spd:%d:", du2-du1);
+
+        // (hzy) Marker for strace.txt to separate all the traces for the preallocation
+        // and traces for the workload
+        filebench_log(LOG_INFO, "HZYHZYHZYHZYHZYHZYHZYHZY");
 	return (FILEBENCH_OK);
 }
 
