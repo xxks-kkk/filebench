@@ -978,7 +978,7 @@ fileset_create(fileset_t *fileset)
         // for the preallocation of the fileset. We want to measure the write()
         // during the workload and thus, we want to exclude the diff between two
         // iostat numbers during the final amplification calculation.
-        char* iostat_cmd = "iostat -d /dev/sda1 | awk '$1 ~ /sda1/ {print $6}'";
+        char* iostat_cmd = "iostat -d /dev/sdb1 | awk '$1 ~ /sdb1/ {print $6}'";
         FILE *fp;
         fp = popen(iostat_cmd, "r");
         int iostat1;
@@ -987,7 +987,7 @@ fileset_create(fileset_t *fileset)
         
         // (hzy) We carry out the same idea for the space difference
         // FIXME: I hardcode empty as the directory path
-        char* du_cmd = "du -k \"$HOME/empty\" | awk 'END {print $1}'";
+        char* du_cmd = "du -k /home/iamzeyuanhu/hzy/empty | awk 'END {print $1}'";
         fp = popen(du_cmd, "r");
         int du1;
         fscanf(fp, "%d", &du1);
